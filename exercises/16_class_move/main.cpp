@@ -1,4 +1,5 @@
 #include "../exercise.h"
+#include <cstddef>
 
 // READ: 左值右值（概念）<https://learn.microsoft.com/zh-cn/cpp/c-language/l-value-and-r-value-expressions?view=msvc-170>
 // READ: 左值右值（细节）<https://zh.cppreference.com/w/cpp/language/value_category>
@@ -15,21 +16,43 @@ class DynFibonacci {
 
 public:
     // TODO: 实现动态设置容量的构造器
-    DynFibonacci(int capacity): cache(new ?), cached(?) {}
+    DynFibonacci(int capacity): cache(new size_t[capacity]{0,1}), cached(2) {}
 
     // TODO: 实现移动构造器
-    DynFibonacci(DynFibonacci &&) noexcept = delete;
+    DynFibonacci(DynFibonacci &&other):cache(other.cache),cached(other.cached) {
+        other.cache=0;
+    }
 
     // TODO: 实现移动赋值
     // NOTICE: ⚠ 注意移动到自身问题 ⚠
-    DynFibonacci &operator=(DynFibonacci &&) noexcept = delete;
+    DynFibonacci &operator=(DynFibonacci &&other) {
+        if (this == &other) {
+            // 移动到自身，什么都不做
+            return *this;
+        }
+
+        // 先释放自己原有的资源
+        delete[] cache;
+
+        // 接管对方的资源
+        cache = other.cache;
+        cached = other.cached;
+
+        // 把对方置为“空壳”
+        other.cache = nullptr;
+        other.cached = 0;
+
+        return *this;
+    }
 
     // TODO: 实现析构器，释放缓存空间
-    ~DynFibonacci();
+    ~DynFibonacci() {
+        delete[] cache;
+    }
 
     // TODO: 实现正确的缓存优化斐波那契计算
     size_t operator[](int i) {
-        for (; false; ++cached) {
+        for (; cached<=i; ++cached) {
             cache[cached] = cache[cached - 1] + cache[cached - 2];
         }
         return cache[i];
